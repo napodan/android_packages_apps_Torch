@@ -10,7 +10,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Handler;
 import android.os.IBinder;
-import android.provider.Settings;
 import android.util.Log;
 
 import java.util.Timer;
@@ -114,7 +113,6 @@ public class TorchService extends Service {
         mNotificationManager.notify(getString(R.string.app_name).hashCode(), mNotification);
 
         startForeground(getString(R.string.app_name).hashCode(), mNotification);
-        Settings.System.putInt(this.getContentResolver(), Settings.System.TORCH_STATE, 1);
         this.sendBroadcast(new Intent(TorchSwitch.TORCH_STATE_CHANGED));
         return START_STICKY;
     }
@@ -126,7 +124,6 @@ public class TorchService extends Service {
         this.mTorchTimer.cancel();
         this.mStrobeTimer.cancel();
         FlashDevice.instance(mContext).setFlashMode(FlashDevice.OFF);
-        Settings.System.putInt(this.getContentResolver(), Settings.System.TORCH_STATE, 0);
         this.sendBroadcast(new Intent(TorchSwitch.TORCH_STATE_CHANGED));
     }
 

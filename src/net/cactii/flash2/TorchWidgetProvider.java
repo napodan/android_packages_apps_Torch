@@ -1,5 +1,8 @@
 package net.cactii.flash2;
 
+import android.app.Activity;
+import android.app.ActivityManager;
+import android.app.ActivityManager.RunningServiceInfo;
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
@@ -9,8 +12,9 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.preference.PreferenceManager;
-import android.provider.Settings;
 import android.widget.RemoteViews;
+
+import java.util.List;
 
 public class TorchWidgetProvider extends AppWidgetProvider {
 
@@ -100,6 +104,22 @@ public class TorchWidgetProvider extends AppWidgetProvider {
         }
     }
 
+    private boolean TorchServiceRunning(Context context) {
+        ActivityManager am = (ActivityManager) context.getSystemService(Activity.ACTIVITY_SERVICE);
+
+        List<ActivityManager.RunningServiceInfo> svcList = am.getRunningServices(100);
+
+        if (!(svcList.size() > 0))
+            return false;
+        for (RunningServiceInfo serviceInfo : svcList) {
+            ComponentName serviceName = serviceInfo.service;
+            if (serviceName.getClassName().endsWith(".TorchService")
+                    || serviceName.getClassName().endsWith(".RootTorchService"))
+                return true;
+        }
+        return false;
+    }
+
     public void updateAllStates(Context context) {
         final AppWidgetManager am = AppWidgetManager.getInstance(context);
         int[] appWidgetIds = am.getAppWidgetIds(
@@ -113,16 +133,14 @@ public class TorchWidgetProvider extends AppWidgetProvider {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 
         views.setOnClickPendingIntent(R.id.btn, getLaunchPendingIntent(context, appWidgetId, 0));
-
-        if ((Settings.System.getInt(context.getContentResolver(),
-                Settings.System.TORCH_STATE, 0) == 1)) {
+        if (this.TorchServiceRunning(context))
+        {
             views.setImageViewResource(R.id.img_torch, WidgetState.ON.getImgDrawable());
             views.setImageViewResource(R.id.ind_torch, WidgetState.ON.getIndDrawable());
         } else {
             views.setImageViewResource(R.id.img_torch, WidgetState.OFF.getImgDrawable());
             views.setImageViewResource(R.id.ind_torch, WidgetState.OFF.getIndDrawable());
         }
-
         if (prefs.getBoolean("widget_strobe_" + appWidgetId, false)) {
             views.setTextViewText(R.id.ind_text, context.getString(R.string.label_strobe));
         } else if (prefs.getBoolean("widget_bright_" + appWidgetId, false)) {

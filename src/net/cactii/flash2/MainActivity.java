@@ -2,7 +2,10 @@
 package net.cactii.flash2;
 
 import android.app.Activity;
+import android.app.ActivityManager;
+import android.app.ActivityManager.RunningServiceInfo;
 import android.app.AlertDialog;
+import android.content.ComponentName;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -11,7 +14,6 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -26,6 +28,8 @@ import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
+
+import java.util.List;
 
 public class MainActivity extends Activity {
 
@@ -190,6 +194,22 @@ public class MainActivity extends Activity {
         super.onResume();
     }
 
+    private boolean TorchServiceRunning(Context context) {
+        ActivityManager am = (ActivityManager) context.getSystemService(Activity.ACTIVITY_SERVICE);
+
+        List<ActivityManager.RunningServiceInfo> svcList = am.getRunningServices(100);
+
+        if (!(svcList.size() > 0))
+            return false;
+        for (RunningServiceInfo serviceInfo : svcList) {
+            ComponentName serviceName = serviceInfo.service;
+            if (serviceName.getClassName().endsWith(".TorchService")
+                    || serviceName.getClassName().endsWith(".RootTorchService"))
+                return true;
+        }
+        return false;
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         boolean supRetVal = super.onCreateOptionsMenu(menu);
@@ -238,22 +258,22 @@ public class MainActivity extends Activity {
     }
 
     private void updateBigButtonState() {
-        if (Settings.System.getInt(context.getContentResolver(),
-                Settings.System.TORCH_STATE, 0) == 1) {
-            mTorchOn = true;
-            buttonOn.setChecked(true);
-            buttonBright.setEnabled(false);
-            buttonStrobe.setEnabled(false);
-            if (!buttonStrobe.isChecked()) {
-                slider.setEnabled(false);
-            }
-        } else {
-            mTorchOn = false;
-            buttonOn.setChecked(false);
-            buttonBright.setEnabled(useBrightSetting);
-            buttonStrobe.setEnabled(true);
-            slider.setEnabled(true);
+      if (this.TorchServiceRunning(context)){
+        mTorchOn = true;
+        buttonOn.setChecked(true);
+        buttonBright.setEnabled(false);
+        buttonStrobe.setEnabled(false);
+        if (!buttonStrobe.isChecked()) {
+          slider.setEnabled(false);
         }
+      } else {
+
+        mTorchOn = false;
+        buttonOn.setChecked(false);
+        buttonBright.setEnabled(useBrightSetting);
+        buttonStrobe.setEnabled(true);
+        slider.setEnabled(true);
+      }
     }
 
     private BroadcastReceiver mStateReceiver = new BroadcastReceiver() {
