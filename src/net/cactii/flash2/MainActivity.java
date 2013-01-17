@@ -11,7 +11,6 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -238,22 +237,11 @@ public class MainActivity extends Activity {
     }
 
     private void updateBigButtonState() {
-        if (Settings.System.getInt(context.getContentResolver(),
-                Settings.System.TORCH_STATE, 0) == 1) {
-            mTorchOn = true;
-            buttonOn.setChecked(true);
-            buttonBright.setEnabled(false);
-            buttonStrobe.setEnabled(false);
-            if (!buttonStrobe.isChecked()) {
-                slider.setEnabled(false);
-            }
-        } else {
             mTorchOn = false;
             buttonOn.setChecked(false);
             buttonBright.setEnabled(useBrightSetting);
             buttonStrobe.setEnabled(true);
             slider.setEnabled(true);
-        }
     }
 
     private BroadcastReceiver mStateReceiver = new BroadcastReceiver() {
